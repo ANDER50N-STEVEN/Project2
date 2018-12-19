@@ -1,0 +1,275 @@
+<!DOCTYPE html >
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="pragma" content="no-cache" />
+    <title>Home Sweet Home</title>
+    <style>                                                       
+                                  /* Stylesheet won't load, error regarding MIME, had to put everything in here*/
+      #map {
+        height: 80%;
+        width: 60%;
+        float:left;
+        margin:20px;
+      }
+      html {
+        margin: 0px;
+        padding: 0px;
+        overflow-x: hidden;
+        min-height: 100%;
+        background-color: #7997a1;
+        color: white;
+        position: relative
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      div.header {
+        position: fixed;
+        width: 100%;
+        display:flex;
+        flex-wrap: nowrap;
+            flex-shrink: 1;
+        
+      }
+      h1.header{
+        font-family: Courier;
+        padding-left: 20px;
+        margin-right: 40px;
+        float:left;
+      }
+      input.search{
+        border-radius: 5px;
+        border-color: #333;
+        margin-top:25px;
+        padding:10px;
+        cursor: pointer;
+        width: 40%;
+        
+      }
+      form.search{
+        display: inline-block;
+        width: 50%;
+      }
+      .signIn, .signUp{
+        border: 1px solid transparent;
+        border-radius: 10px;
+        display: inline-block;
+        text-decoration: none;
+        padding: .5rem 1rem;
+        color: rgba(255, 255, 255);
+        font-weight: 700;
+        background: rgba(10, 20, 30, .2);
+        cursor: pointer;
+      }
+      .login{
+        float: right;
+        margin: 30px;
+      }
+      .drop, .submit {
+        border: 1px solid transparent;
+        border-radius: 10px;
+        display: inline-block;
+        text-decoration: none;
+        padding: .5rem 1rem;
+        color: rgba(255, 255, 255);
+        font-weight: 700;
+        background: rgba(10, 20, 30, .2);
+        cursor: pointer;
+      }
+      .filter{
+        font-family: Courier;
+        margin-right: 50px;
+        display: flex;
+      }
+      div.requirements{
+        margin: 10px;
+        float: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='header'>
+    <h1 class='header'>Home Sweet Home</h1>
+    <!-- I wanted to be able to search for your city but didn't have time to figure that out. -->
+    <form class='search'>   
+      <input type="text" class="search" name="search" placeholder="Enter City to Search in"><input type="submit" name="submit" value="Search" class='submit' style='color:black'>
+    </form>
+
+<!-- do not function -->
+    <div class='login'><form action="">
+    <input type="submit" value="Log In" class='signIn'style='color:black'/>
+    </form></div>
+
+    <div class='login'><form action="">
+    <input type="submit" value="Create Profile" class='signUp'style='color:black'/>
+    </form></div></div>
+
+
+    </br></br></br>
+    <!-- tried to adapt googles mysql functionality to postgress -->
+    <div id="map"></div>
+
+<div class='filter'>
+    <form id='requirements' class='requirements'>
+      <div class='requirements'>
+        <div>Minimum Price</div>
+        <select name="minPrice" class='drop' onchange="updateFilters(this.value, 'min')">
+              <option value="0"> No Min</option>
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="600">600</option>
+              <option value="700">700</option>
+              <option value="800">800</option>
+              <option value="900">900</option>
+              <option value="1000">1000</option>
+              <option value="1100">1100</option>
+        </select>
+      </div>
+
+      <div class='requirements'>
+        <div>Maximum Price</div>
+        <select name="maxPrice" class='drop' onchange="updateFilters(this.value, 'max')">
+             <option value="100000"> No Max </option>
+            <option value="400">400</option>
+            <option value="500">500</option>
+            <option value="600">600</option>
+            <option value="700">700</option>
+            <option value="800">800</option>
+            <option value="900">900</option>
+            <option value="1000">1000</option>
+            <option value="1100">1100</option>
+            <option value="1200">1200</option>
+            <option value="1300">1300</option>
+            <option value="1400">1400</option>
+            <option value="1500">1500</option>
+            <option value="1600">1600</option>
+            <option value="1700">1700</option>
+            <option value="1800">1800</option>
+            <option value="1900">1900</option>
+        </select>
+      </div><br><br><br><br>
+
+      <div class='requirements'>
+        <div>Beds</div>
+        <select name="beds" class='drop' onchange="updateFilters(this.value, 'bed')">
+          <option value="0"> No Min/Studio</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+          <option value="5">5+</option>
+        </select></div>
+    
+       <div class='requirements'>
+        <div>Bathrooms</div>
+        <select name="bath" class = 'drop' onchange="updateFilters(this.value, 'bath')">
+          <option value="0"> No Min</option>
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+  </select></div></form></div>
+    <br><br>
+    
+    <!-- I wanted items that fit filters to be displayed in either a list or table -->
+
+    <ul id="rent"></ul>
+
+   <script>
+
+        function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+        center: new google.maps.LatLng(45.512230, -122.658722),
+          zoom: 12
+        });
+        var infoWindow = new google.maps.InfoWindow;
+
+          
+          downloadUrl('markers.php', function(data) {                   //neither an xml or a php file will load information
+            var xml = data.responseXML;
+            var markers = xml.documentElement.getElementsByTagName('marker');
+            Array.prototype.forEach.call(markers, function(markerElem) {
+              var id = markerElem.getAttribute('id');
+              var name = markerElem.getAttribute('name');
+              var address = markerElem.getAttribute('address');
+              var type = markerElem.getAttribute('type');
+              var point = new google.maps.LatLng(
+                  parseFloat(markerElem.getAttribute('lat')),
+                  parseFloat(markerElem.getAttribute('lng')));
+
+              var infowincontent = document.createElement('div');
+              var strong = document.createElement('strong');
+              strong.textContent = name
+              infowincontent.appendChild(strong);
+              infowincontent.appendChild(document.createElement('br'));
+
+              var text = document.createElement('text');
+              text.textContent = address
+              infowincontent.appendChild(text);
+              var icon = customLabel[price] || {};   //Want it to display price on map
+              var marker = new google.maps.Marker({
+                map: map,
+                position: point,
+                label: icon.label
+              });
+              marker.addListener('click', function() {
+                infoWindow.setContent(infowincontent);
+                infoWindow.open(map, marker);
+              });
+            });
+          });
+        }
+
+
+   function updateFilters(value, reqtype) {
+      var xhttp = new XMLHttpRequest();
+      var data;
+      xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        document.getElementById("rent").innerHTML =
+        this.responseText;
+      }
+      else if(this.status == 500)
+        document.getElementById("rent").innerHTML =
+        "Couldn't Find any Rentals with those Requirements.";
+      };
+
+      let action = "";
+      if(reqtype === 'min')
+      action = "/minPrice";
+      else if (reqtype === 'max')
+      action = "/maxPrice";
+      else if (reqtype ==='bed')
+      action = "/bedrooms";
+      else if (reqtype ==='bath')
+      action = "/bathrooms";
+      
+      xhttp.open("GET", action + "?value=" + value, true);
+      xhttp.send();
+    }
+
+      function downloadUrl(url, callback) {
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+          if (request.readyState == 4) {
+            request.onreadystatechange = doNothing;
+            callback(request, request.status);
+          }
+        };
+
+        request.open('GET', url, true);
+        request.send(null);
+      }
+
+      function doNothing() {}
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLLEb28ya7yyso5Sqw1ffEmaSX86c7LYY&callback=initMap">
+    </script>
+  </body>
+</html>
